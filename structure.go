@@ -3,6 +3,7 @@ package gofindit
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -25,7 +26,20 @@ func getFieldValues(v any) (map[string]any, error) {
 	// Create a map of the structure
 	structureMap := make(map[string]any)
 	for _, field := range structure {
-		structureMap[field.Name] = field.Value
+		// If the field type is string or []string then lowercase
+		// the value to make it case insensitive
+		if field.Type == "string" {
+			structureMap[field.Name] = strings.ToLower(field.Value.(string))
+		} else if field.Type == "[]string" {
+			// Lowercase all strings in the slice
+			var lowerSlice []string
+			for _, s := range field.Value.([]string) {
+				lowerSlice = append(lowerSlice, strings.ToLower(s))
+			}
+			structureMap[field.Name] = lowerSlice
+		} else {
+			structureMap[field.Name] = field.Value
+		}
 	}
 
 	return structureMap, nil
@@ -200,7 +214,7 @@ func getStructure(v any, parent string) ([]StructField, error) {
 }
 
 // Base types
-var baseTypes = []string{"string", "int", "uint", "float", "bool", "[]string", "[]int", "[]uint", "[]float", "[]bool", "time"}
+// var baseTypes = []string{"string", "int", "uint", "float", "bool", "[]string", "[]int", "[]uint", "[]float", "[]bool", "time"}
 
 func getBaseType(value any) string {
 	switch reflect.TypeOf(value).Kind() {
