@@ -15,7 +15,7 @@ type StructField struct {
 
 // Using getStructure to get the structure of a struct
 // and output map[string]any (name and value)
-func getFieldValueMap(v any) (map[string]any, error) {
+func getFieldValues(v any) (map[string]any, error) {
 	// Get the structure of the document
 	structure, err := getStructure(v, "")
 	if err != nil {
@@ -26,6 +26,22 @@ func getFieldValueMap(v any) (map[string]any, error) {
 	structureMap := make(map[string]any)
 	for _, field := range structure {
 		structureMap[field.Name] = field.Value
+	}
+
+	return structureMap, nil
+}
+
+func getFieldTypes(v any) (map[string]string, error) {
+	// Get the structure of the document
+	structure, err := getStructure(v, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map of the structure
+	structureMap := make(map[string]string)
+	for _, field := range structure {
+		structureMap[field.Name] = field.Type
 	}
 
 	return structureMap, nil
@@ -50,7 +66,7 @@ func getStructure(v any, parent string) ([]StructField, error) {
 	for i := 0; i < val.NumField(); i++ {
 		valueField := val.Field(i)
 		typeField := val.Type().Field(i)
-		name := typeField.Tag.Get("find")
+		name, _ := typeField.Tag.Lookup("find")
 		if name == "-" {
 			continue
 		}
@@ -114,11 +130,32 @@ func getStructure(v any, parent string) ([]StructField, error) {
 					Value:     valueField.Interface().([]string),
 					Supported: true,
 				})
-			case reflect.Int:
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				fields = append(fields, StructField{
 					Name:      name,
 					Type:      "[]int",
 					Value:     valueField.Interface().([]int),
+					Supported: true,
+				})
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				fields = append(fields, StructField{
+					Name:      name,
+					Type:      "[]uint",
+					Value:     valueField.Interface().([]uint),
+					Supported: true,
+				})
+			case reflect.Float32, reflect.Float64:
+				fields = append(fields, StructField{
+					Name:      name,
+					Type:      "[]float",
+					Value:     valueField.Interface().([]float64),
+					Supported: true,
+				})
+			case reflect.Bool:
+				fields = append(fields, StructField{
+					Name:      name,
+					Type:      "[]bool",
+					Value:     valueField.Interface().([]bool),
 					Supported: true,
 				})
 			default:
@@ -152,7 +189,7 @@ func getStructure(v any, parent string) ([]StructField, error) {
 			// default to the type of the field
 			fields = append(fields, StructField{
 				Name:      name,
-				Type:      valueField.Kind().String(),
+				Type:      valueField.Type().String(),
 				Value:     valueField.Interface(),
 				Supported: false,
 			})
@@ -160,4 +197,36 @@ func getStructure(v any, parent string) ([]StructField, error) {
 	}
 
 	return fields, nil
+}
+
+// Base types
+var baseTypes = []string{"string", "int", "uint", "float", "bool", "[]string", "[]int", "[]uint", "[]float", "[]bool", "time"}
+
+func getBaseType(value any) string {
+	switch reflect.TypeOf(value).Kind() {
+	case reflect.String:
+		return "string"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return "int"
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return "uint"
+	case reflect.Float32, reflect.Float64:
+		return "float"
+	case reflect.Bool:
+		return "bool"
+	case reflect.Array, reflect.Slice:
+		// Get the type of the slice by calling getBaseType on the first element
+		elemType := reflect.TypeOf(value).Elem()
+		return "[]" + getBaseType(reflect.New(elemType).Elem().Interface())
+	case reflect.Struct:
+		// Special handling for time.Time
+		if reflect.TypeOf(value) == reflect.TypeOf(time.Time{}) {
+			return "time"
+		}
+
+		// Recursive call for other structs
+		return "struct"
+	}
+
+	return reflect.TypeOf(value).Kind().String()
 }
