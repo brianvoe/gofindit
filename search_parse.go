@@ -3,7 +3,6 @@ package gofindit
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -11,7 +10,7 @@ import (
 
 // Take full raw query string and parse it into a SearchQuery struct
 // Field types are a flat structure of the field and type of field
-func StringToSearchQuery(input string, fieldTypes map[string]string) (*SearchQuery, error) {
+func StringToSearchQuery(input string) (*SearchQuery, error) {
 	fields := make([]SearchQueryField, 0)
 	var limit, skip uint64
 	var sort string
@@ -64,14 +63,6 @@ func StringToSearchQuery(input string, fieldTypes map[string]string) (*SearchQue
 			continue
 		}
 
-		// Get the type from the fieldTypes map
-		fieldType := ""
-		if _, ok := fieldTypes[fieldName]; ok {
-			fieldType = fieldTypes[fieldName]
-		} else {
-			return nil, fmt.Errorf("field name `%s` does not exist", fieldName)
-		}
-
 		searchType := ""
 		fieldValue := values[0] // Get the first value for the field
 
@@ -86,7 +77,7 @@ func StringToSearchQuery(input string, fieldTypes map[string]string) (*SearchQue
 		}
 
 		// Map the value to the appropriate type
-		valueAny, err := MapValueStringToQueryFieldValue(value, fieldType)
+		valueAny, err := stringToAny(value)
 		if err != nil {
 			return nil, err
 		}
@@ -132,80 +123,6 @@ func StringToSearchQuery(input string, fieldTypes map[string]string) (*SearchQue
 	}
 
 	return searchQuery, nil
-}
-
-func MapValueStringToQueryFieldValue(value string, fieldType string) (any, error) {
-	// Switch statement on fieldType
-	switch fieldType {
-	case "string", "[]string":
-		return value, nil
-	case "bool":
-		return strconv.ParseBool(value)
-	case "int", "float":
-		// Check for slice types
-		if strings.Contains(value, ",") {
-			values := strings.Split(value, ",")
-			var floats []float64
-			var isFloat = false
-
-			// First pass: check if any value is a float
-			for _, v := range values {
-				if strings.Contains(v, ".") {
-					if _, err := strconv.ParseFloat(v, 64); err == nil {
-						isFloat = true
-						break
-					}
-				}
-			}
-
-			// Convert to float slice if any value is a float
-			if isFloat {
-				for _, v := range values {
-					floatVal, err := strconv.ParseFloat(v, 64)
-					if err != nil {
-						return nil, err // return error if conversion fails
-					}
-					floats = append(floats, floatVal)
-				}
-				return floats, nil
-			}
-
-			// If no floats, check for int and bool types
-			var ints []int
-			var isInt = true
-
-			for _, v := range values {
-				// Try int
-				if _, err := strconv.Atoi(v); err != nil {
-					isInt = false
-				}
-			}
-
-			// Convert to the appropriate non-float slice type
-			if isInt {
-				for _, v := range values {
-					intVal, _ := strconv.Atoi(v)
-					ints = append(ints, intVal)
-				}
-				return ints, nil
-			}
-
-			// return string slice
-			return values, nil
-		}
-
-		// If not a slice, convert to the appropriate type
-		if fieldType == "float" {
-			return strconv.ParseFloat(value, 64)
-		}
-		if fieldType == "int" {
-			return strconv.Atoi(value)
-		}
-	default:
-		return nil, fmt.Errorf("unknown type: %s", fieldType)
-	}
-
-	return value, nil
 }
 
 func JsontoSearchQueries(jsonBytes []byte) (*SearchQuery, error) {

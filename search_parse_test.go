@@ -31,11 +31,6 @@ type TestAddress struct {
 }
 
 func TestMapStringToSearchQuery(t *testing.T) {
-	structure, err := getFieldTypes(TestUser{})
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
 	testCases := []struct {
 		name     string
 		input    string
@@ -156,7 +151,7 @@ func TestMapStringToSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			searchQuery, err := StringToSearchQuery(tc.input, structure)
+			searchQuery, err := StringToSearchQuery(tc.input)
 			if tc.hasError {
 				if err == nil {
 					t.Errorf("Expected error, got nil")

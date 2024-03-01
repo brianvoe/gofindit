@@ -11,7 +11,12 @@ func TestGetFieldTypeMap(t *testing.T) {
 		Age  int    `find:"age"`
 	}
 
-	structure, err := getFieldTypes(Test{})
+	structureFields, err := getStructure(Test{}, "")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	structure, err := getFieldTypes(structureFields)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}

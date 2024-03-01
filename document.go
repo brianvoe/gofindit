@@ -7,14 +7,20 @@ type Document struct {
 }
 
 func NewDocument(doc any) (*Document, error) {
+	// Get structure of the document
+	structure, err := getStructure(doc, "")
+	if err != nil {
+		return nil, err
+	}
+
 	// Get field value map
-	fieldValueMap, err := getFieldValues(doc)
+	fieldValueMap, err := getFieldValues(structure)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get field types
-	fieldTypes, err := getFieldTypes(doc)
+	fieldTypes, err := getFieldTypes(structure)
 	if err != nil {
 		return nil, err
 	}
@@ -29,21 +35,22 @@ func NewDocument(doc any) (*Document, error) {
 	return &document, nil
 }
 
-func (d *Document) GetFieldValue(field string) (any, string, bool) {
+func (d *Document) GetFieldValue(field string) (any, bool) {
 	// Check if the field exists
-	_, ok := (*d).FieldValues[field]
-	if !ok {
-		return nil, "", false
-	}
-
-	// Get value type using reflect
 	value, ok := (*d).FieldValues[field]
 	if !ok {
-		return nil, "", false
+		return nil, false
 	}
 
-	// Get value type using reflect
-	valueType := getBaseType(value)
+	return value, true
+}
 
-	return (*d).FieldValues[field], valueType, true
+func (d *Document) GetFieldType(field string) (string, bool) {
+	// Check if the field exists
+	value, ok := (*d).FieldTypes[field]
+	if !ok {
+		return "", false
+	}
+
+	return value, true
 }

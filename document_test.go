@@ -25,7 +25,7 @@ func ExampleNewDocument() {
 	fmt.Println(document.FieldValues)
 
 	// Output: map[Age:int Name:string]
-	// map[Age:10 Name:Test]
+	// map[Age:10 Name:test]
 }
 
 func ExampleDocument_GetFieldValue() {
@@ -43,12 +43,12 @@ func ExampleDocument_GetFieldValue() {
 	// Create a new document
 	document, _ := NewDocument(doc)
 
-	value, valueType, found := document.GetFieldValue("name")
-	fmt.Println(value, valueType, found)
+	value, found := document.GetFieldValue("name")
+	fmt.Println(value, found)
 
-	value, valueType, found = document.GetFieldValue("age")
-	fmt.Println(value, valueType, found)
+	value, found = document.GetFieldValue("age")
+	fmt.Println(value, found)
 
-	// Output: Test string true
-	// 10 int true
+	// Output: test true
+	// 10 true
 }

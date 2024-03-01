@@ -1,9 +1,96 @@
 package gofindit
 
 import (
+	"fmt"
 	"math"
+	"reflect"
 	"testing"
 )
+
+func TestStringToAny(t *testing.T) {
+	examples := []struct {
+		name       string
+		value      string
+		result     any
+		resultType string // string, int, float, bool, []int, []float64, []bool, []string
+		err        bool
+	}{
+		{
+			name:       "int",
+			value:      "1",
+			result:     1,
+			resultType: "int",
+			err:        false,
+		},
+		{
+			name:       "float",
+			value:      "1.1",
+			result:     1.1,
+			resultType: "float",
+			err:        false,
+		},
+		{
+			name:       "bool",
+			value:      "true",
+			result:     true,
+			resultType: "bool",
+			err:        false,
+		},
+		{
+			name:       "int array",
+			value:      "1,2,3",
+			result:     []int{1, 2, 3},
+			resultType: "[]int",
+			err:        false,
+		},
+		{
+			name:       "float array",
+			value:      "1.1,2.2,3.3",
+			result:     []float64{1.1, 2.2, 3.3},
+			resultType: "[]float64",
+			err:        false,
+		},
+		{
+			name:       "bool array",
+			value:      "true,false,true",
+			result:     []bool{true, false, true},
+			resultType: "[]bool",
+			err:        false,
+		},
+		{
+			name:       "string array",
+			value:      "one,two,three",
+			result:     []string{"one", "two", "three"},
+			resultType: "[]string",
+			err:        false,
+		},
+		// {
+		// 	name:       "any array",
+		// 	value:      "1,2.2,true,one",
+		// 	result:     []any{1, 2.2, true, "one"},
+		// 	resultType: "[]any",
+		// 	err:        false,
+		// },
+	}
+
+	for _, example := range examples {
+		t.Run(example.name, func(t *testing.T) {
+			got, err := stringToAny(example.value)
+			if (err != nil) != example.err {
+				t.Errorf("stringToAny(%q) error = %v, wantErr %v", example.value, err, example.err)
+				return
+			}
+
+			if !reflect.DeepEqual(got, example.result) {
+				// output result and type
+				fmt.Printf("result: %v, type: %T\n", got, got)
+				fmt.Printf("expected result: %v, type: %s\n\n", example.result, example.resultType)
+
+				t.Errorf("stringToAny(%q) = %v, want %v", example.value, got, example.result)
+			}
+		})
+	}
+}
 
 func TestToFloat64(t *testing.T) {
 	tests := []struct {

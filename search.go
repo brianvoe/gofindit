@@ -102,7 +102,16 @@ func (dq *SearchQueryField) Validate() error {
 	return nil
 }
 
-// Search returns a list of document IDs that match the given field and value
+func (i *Index) SearchStr(search string) ([]any, error) {
+	sq, err := StringToSearchQuery(search)
+	if err != nil {
+		return nil, err
+	}
+
+	return i.Search(*sq)
+}
+
+// Search returns a array of documents
 func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 	// Set default values if none set
 	searchQuery.Sanatize()
@@ -145,11 +154,14 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 		// Loop through search query fields
 		for _, query := range searchQueryField {
 			// Get Value and Type
-			value, valueType, found := doc.GetFieldValue(query.Field)
+			value, found := doc.GetFieldValue(query.Field)
 			if !found {
 				// Field not found
 				continue
 			}
+
+			// Get Value Type
+			valueType, _ := doc.GetFieldType(query.Field)
 
 			// Get Query Value and Type
 			queryValue := query.Value
