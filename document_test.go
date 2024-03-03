@@ -2,7 +2,7 @@ package gofindit
 
 import "fmt"
 
-func ExampleNewDocument() {
+func ExampleNewDoc() {
 	type Test struct {
 		Name string `find:"Name"`
 		Age  int    `find:"Age"`
@@ -15,17 +15,15 @@ func ExampleNewDocument() {
 	}
 
 	// Create a new document
-	document, err := NewDocument(doc)
+	document, err := NewDoc(doc)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(document.FieldTypes)
-	fmt.Println(document.FieldValues)
+	fmt.Println(document.Values)
 
-	// Output: map[Age:int Name:string]
-	// map[Age:10 Name:test]
+	// Output: map[Age:{int 10 []} Name:{string Test [test]}]
 }
 
 func ExampleDocument_GetFieldValue() {
@@ -41,13 +39,13 @@ func ExampleDocument_GetFieldValue() {
 	}
 
 	// Create a new document
-	document, _ := NewDocument(doc)
+	document, _ := NewDoc(doc)
 
-	value, found := document.GetFieldValue("name")
-	fmt.Println(value, found)
+	value, _ := document.GetFieldValue("name")
+	fmt.Println(value)
 
-	value, found = document.GetFieldValue("age")
-	fmt.Println(value, found)
+	value, _ = document.GetFieldValue("age")
+	fmt.Println(value)
 
 	// Output: test true
 	// 10 true

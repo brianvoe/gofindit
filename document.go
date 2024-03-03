@@ -1,35 +1,45 @@
 package gofindit
 
 type Document struct {
-	Original    any
-	FieldValues map[string]any
-	FieldTypes  map[string]string
+	Original any
+	Values   map[string]FieldValue
+
+	Filters []FilterFunc
 }
 
-func NewDocument(doc any) (*Document, error) {
+func NewDoc(doc any) (*Document, error) {
+	return NewDocFilters(doc, DefaultFilters...)
+}
+
+func NewDocFilters(doc any, filters ...FilterFunc) (*Document, error) {
 	// Get structure of the document
-	structure, err := getStructure(doc, "")
+	values, err := getStructure(doc, "")
 	if err != nil {
 		return nil, err
 	}
-
-	// Get field value map
-	fieldValueMap, err := getFieldValues(structure)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get field types
-	fieldTypes, err := getFieldTypes(structure)
-	if err != nil {
-		return nil, err
+	// Loop through values and
+	// if they are a string, tokenize them
+	for k, v := range values {
+		if v.Type == "string" {
+			// Tokenize the string
+			tokens, error := Tokenize(v.Value.(string), filters)
+			if error != nil {
+				return nil, error
+			}
+			values[k] = FieldValue{
+				Type:   values[k].Type,
+				Value:  values[k].Value,
+				Tokens: tokens,
+			}
+		}
 	}
 
 	// Create a new document
 	document := Document{
-		Original:    doc,
-		FieldValues: fieldValueMap,
-		FieldTypes:  fieldTypes,
+		Original: doc,
+		Values:   values,
+
+		Filters: filters,
 	}
 
 	return &document, nil
@@ -37,20 +47,20 @@ func NewDocument(doc any) (*Document, error) {
 
 func (d *Document) GetFieldValue(field string) (any, bool) {
 	// Check if the field exists
-	value, ok := (*d).FieldValues[field]
+	value, ok := (*d).Values[field]
 	if !ok {
 		return nil, false
 	}
 
-	return value, true
+	return value.Value, true
 }
 
 func (d *Document) GetFieldType(field string) (string, bool) {
 	// Check if the field exists
-	value, ok := (*d).FieldTypes[field]
+	value, ok := (*d).Values[field]
 	if !ok {
 		return "", false
 	}
 
-	return value, true
+	return value.Type, true
 }

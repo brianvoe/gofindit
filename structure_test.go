@@ -1,33 +1,37 @@
 package gofindit
 
 import (
-	"reflect"
 	"testing"
 )
 
-func TestGetFieldTypeMap(t *testing.T) {
+func TestGetStructure(t *testing.T) {
 	type Test struct {
-		Name string `find:"name"`
-		Age  int    `find:"age"`
+		Name string `find:"Name"`
+		Age  int    `find:"Age"`
 	}
 
-	structureFields, err := getStructure(Test{}, "")
+	doc := Test{
+		Name: "Test",
+		Age:  10,
+	}
+
+	// Get structure of the document
+	structure, err := getStructure(doc, "")
 	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
+		t.Errorf("Expected nil, got %v", err)
 	}
 
-	structure, err := getFieldTypes(structureFields)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
+	// Check if the structure is correct
+	if len(structure) != 2 {
+		t.Errorf("Expected 2, got %v", len(structure))
 	}
 
-	expected := map[string]string{
-		"name": "string",
-		"age":  "int",
+	// Check if the structure is correct
+	if structure["Name"].Type != "string" {
+		t.Errorf("Expected string, got %v", structure["Name"].Type)
 	}
-
-	if !reflect.DeepEqual(structure, expected) {
-		t.Errorf("Expected %v, got %v", expected, structure)
+	if structure["Age"].Type != "int" {
+		t.Errorf("Expected int, got %v", structure["Age"].Type)
 	}
 }
 

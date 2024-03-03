@@ -6,51 +6,14 @@ import (
 	"time"
 )
 
-type StructField struct {
-	Name      string
-	Type      string
-	Value     any
-	Supported bool
-}
-
-// Using getStructure to get the structure of a struct
-// and output map[string]any (name and value)
-func getFieldValues(v any) (map[string]any, error) {
-	// Get the structure of the document
-	structure, err := getStructure(v, "")
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a map of the structure
-	structureMap := make(map[string]any)
-	for _, field := range structure {
-		// If the field type is string or []string then lowercase
-		// the value to make it case insensitive
-		if field.Type == "string" {
-			structureMap[field.Name] = field.Value.(string)
-		} else if field.Type == "[]string" {
-			structureMap[field.Name] = field.Value.([]string)
-		} else {
-			structureMap[field.Name] = field.Value
-		}
-	}
-
-	return structureMap, nil
-}
-
-func getFieldTypes(structure []StructField) (map[string]string, error) {
-	// Create a map of the structure
-	structureMap := make(map[string]string)
-	for _, field := range structure {
-		structureMap[field.Name] = field.Type
-	}
-
-	return structureMap, nil
+type FieldValue struct {
+	Type   string
+	Value  any
+	Tokens []string
 }
 
 // getStructure returns an array of
-func getStructure(v any, parent string) ([]StructField, error) {
+func getStructure(v any, parent string) (map[string]FieldValue, error) {
 	// Make sure v is a struct
 	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		return nil, fmt.Errorf("v is not a struct")
@@ -62,7 +25,7 @@ func getStructure(v any, parent string) ([]StructField, error) {
 		val = val.Elem()
 	}
 
-	fields := make([]StructField, 0)
+	fields := make(map[string]FieldValue)
 
 	// Loop through fields and add name and type to fields
 	for i := 0; i < val.NumField(); i++ {
@@ -86,97 +49,73 @@ func getStructure(v any, parent string) ([]StructField, error) {
 		// Handle different types
 		switch valueField.Kind() {
 		case reflect.String:
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      "string",
-				Value:     valueField.String(),
-				Supported: true,
-			})
+			fields[name] = FieldValue{
+				Type:  "string",
+				Value: valueField.String(),
+			}
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      "int",
-				Value:     valueField.Int(),
-				Supported: true,
-			})
+			fields[name] = FieldValue{
+				Type:  "int",
+				Value: valueField.Int(),
+			}
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      "uint",
-				Value:     valueField.Uint(),
-				Supported: true,
-			})
+			fields[name] = FieldValue{
+				Type:  "uint",
+				Value: valueField.Uint(),
+			}
 		case reflect.Float32, reflect.Float64:
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      "float",
-				Value:     valueField.Float(),
-				Supported: true,
-			})
+			fields[name] = FieldValue{
+				Type:  "float",
+				Value: valueField.Float(),
+			}
 		case reflect.Bool:
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      "bool",
-				Value:     valueField.Bool(),
-				Supported: true,
-			})
+			fields[name] = FieldValue{
+				Type:  "bool",
+				Value: valueField.Bool(),
+			}
 		case reflect.Array, reflect.Slice:
 			// Get the type of the slice elements
 			elemType := valueField.Type().Elem()
 
 			switch elemType.Kind() {
 			case reflect.String:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "[]string",
-					Value:     valueField.Interface().([]string),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "[]string",
+					Value: valueField.Interface().([]string),
+				}
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "[]int",
-					Value:     valueField.Interface().([]int),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "[]int",
+					Value: valueField.Interface().([]int),
+				}
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "[]uint",
-					Value:     valueField.Interface().([]uint),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "[]uint",
+					Value: valueField.Interface().([]uint),
+				}
 			case reflect.Float32, reflect.Float64:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "[]float",
-					Value:     valueField.Interface().([]float64),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "[]float",
+					Value: valueField.Interface().([]float64),
+				}
 			case reflect.Bool:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "[]bool",
-					Value:     valueField.Interface().([]bool),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "[]bool",
+					Value: valueField.Interface().([]bool),
+				}
 			default:
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      elemType.Kind().String(),
-					Value:     valueField.Interface(),
-					Supported: false,
-				})
+				fields[name] = FieldValue{
+					Type:  elemType.Kind().String(),
+					Value: valueField.Interface(),
+				}
 			}
 		case reflect.Struct:
 			// Special handling for time.Time
 			if valueField.Type() == reflect.TypeOf(time.Time{}) {
-				fields = append(fields, StructField{
-					Name:      name,
-					Type:      "time.Time",
-					Value:     valueField.Interface().(time.Time),
-					Supported: true,
-				})
+				fields[name] = FieldValue{
+					Type:  "time.Time",
+					Value: valueField.Interface().(time.Time),
+				}
 			} else {
 				// Recursive call for other structs
 				structFields, err := getStructure(valueField.Interface(), name)
@@ -185,16 +124,16 @@ func getStructure(v any, parent string) ([]StructField, error) {
 				}
 
 				// Add struct fields to fields
-				fields = append(fields, structFields...)
+				for k, v := range structFields {
+					fields[k] = v
+				}
 			}
 		default:
 			// default to the type of the field
-			fields = append(fields, StructField{
-				Name:      name,
-				Type:      valueField.Type().String(),
-				Value:     valueField.Interface(),
-				Supported: false,
-			})
+			fields[name] = FieldValue{
+				Type:  valueField.Type().String(),
+				Value: valueField.Interface(),
+			}
 		}
 	}
 

@@ -56,11 +56,7 @@ type SearchQueryField struct {
 }
 
 func (dq *SearchQueryField) Sanatize() {
-	// If value is string, make it lower case
-	switch dq.Value.(type) {
-	case string:
-		dq.Value = strings.ToLower(dq.Value.(string))
-	}
+	// TODO: Not sanatizing anything right now on the initial search query field input
 }
 
 func (dq *SearchQueryField) Validate() error {
@@ -153,7 +149,7 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 
 		// Loop through search query fields
 		for _, query := range searchQueryField {
-			// Get Value and Type
+			// Get Value
 			value, found := doc.GetFieldValue(query.Field)
 			if !found {
 				// Field not found
@@ -170,98 +166,22 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 			// Check if the value matches the query
 			switch queryType {
 			case "match":
-				// Convert both to string and do an exact match
-				if fmt.Sprint(value) == fmt.Sprint(queryValue) {
+				matched, err := isSearchMatch(value, valueType, queryValue, queryType)
+				if err != nil {
+					return nil, err
+				}
+				if matched {
 					matches++
 				}
 			case "partial":
-				// if bool or time then just continue
-				if valueType == "bool" || valueType == "time" {
-					continue
+				matched, err := isSearchPartial(value, valueType, queryValue, queryType)
+				if err != nil {
+					return nil, err
 				}
-
-				// Convert both values to string and then do strings.Contains
-				switch valueType {
-				// Any numbers convert to string and then do strings.Contains
-				case "string", "int", "uint", "float":
-					if strings.Contains(fmt.Sprint(value), fmt.Sprint(queryValue)) {
-						matches++
-					}
-				case "[]string", "[]int", "[]uint", "[]float":
-					// Loop through array and check if any of the values match
-					for _, v := range value.([]any) {
-						if strings.Contains(fmt.Sprint(v), fmt.Sprint(queryValue)) {
-							matches++
-							break // If one value matches, break the loop
-						}
-					}
+				if matched {
+					matches++
 				}
 			case "range":
-				// If valueType is not a number, then continue
-				if valueType == "string" || valueType == "bool" {
-					continue
-				}
-
-				// Initial declarations for min and max values for both numeric and time ranges
-				var minNum, maxNum float64
-				var minTime, maxTime time.Time
-				var err error
-				var isTimeRange, isNumRange bool
-
-				// Determine the type of range query: Time or Numeric based on valueType
-				switch valueType {
-				case "time":
-					isTimeRange = true
-					// Handle time ranges
-					if timeRange, ok := queryValue.([]time.Time); ok && len(timeRange) > 0 {
-						minTime = timeRange[0]
-						if len(timeRange) > 1 {
-							maxTime = timeRange[1]
-						}
-					} else if singleTime, ok := queryValue.(time.Time); ok {
-						minTime = singleTime
-						// For single time, consider maxTime as zero value of time.Time, indicating no end range
-					}
-				case "int", "uint", "float":
-					isNumRange = true
-					// Handle numeric ranges
-					if numRange, ok := queryValue.([]time.Time); ok && len(numRange) > 0 {
-						minNum, err = toFloat64(numRange[0])
-						if err != nil {
-							continue // Skip if conversion fails
-						}
-						if len(numRange) > 1 {
-							maxNum, err = toFloat64(numRange[1])
-							if err != nil {
-								continue // Skip if conversion fails
-							}
-						}
-					} else if singleNum, ok := queryValue.(float64); ok {
-						minNum = singleNum
-						// For single number, consider maxNum as not set
-					}
-				}
-
-				// Compare based on determined range type
-				if isTimeRange {
-					fieldValue := value.(time.Time)
-					if !minTime.IsZero() && fieldValue.Before(minTime) {
-						continue
-					}
-					if !maxTime.IsZero() && fieldValue.After(maxTime) {
-						continue
-					}
-					matches++
-				} else if isNumRange {
-					fieldValue, err := toFloat64(value)
-					if err != nil {
-						continue // Skip if conversion fails
-					}
-					if fieldValue < minNum || (!isZero(maxNum) && fieldValue > maxNum) {
-						continue
-					}
-					matches++
-				}
 
 			}
 
@@ -278,10 +198,10 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 	sort.SliceStable(results, func(i, j int) bool {
 		// Sort by the sub field FieldValues
 		if sortOrder == "desc" {
-			return fmt.Sprint(results[i].FieldValues[sortBy]) > fmt.Sprint(results[j].FieldValues[sortBy])
+			return fmt.Sprint(results[i].Values[sortBy].Value) > fmt.Sprint(results[j].Values[sortBy].Value)
 		}
 
-		return fmt.Sprint(results[i].FieldValues[sortBy]) < fmt.Sprint(results[j].FieldValues[sortBy])
+		return fmt.Sprint(results[i].Values[sortBy].Value) < fmt.Sprint(results[j].Values[sortBy].Value)
 	})
 
 	// Handle skip
@@ -307,4 +227,115 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 	}
 
 	return originalResults, nil
+}
+
+// searchMatch checks if the value matches the query value
+func isSearchMatch(value any, valueType string, queryValue any, queryValueType string) (bool, error) {
+	// If the value type and query value type are the same, then just compare them
+	if (valueType == "string" && queryValueType == "string") ||
+		(valueType == "bool" && queryValueType == "bool") ||
+		(valueType == "int" && queryValueType == "int") ||
+		(valueType == "uint" && queryValueType == "uint") ||
+		(valueType == "float" && queryValueType == "float") {
+		return value == queryValue, nil
+	}
+
+	// TODO: Handle various types of arrays and mix valuetype scenarios
+	// Otherwise, convert the value to a string and compare
+	return fmt.Sprint(value) == fmt.Sprint(queryValue), nil
+}
+
+func isSearchPartial(value any, valueType string, queryValue any, queryValueType string) (bool, error) {
+	// if bool or time then just continue
+	if valueType == "bool" || valueType == "time" {
+		return false, fmt.Errorf("cannot use partial search on %s type", valueType)
+	}
+
+	// Convert both values to string and then do strings.Contains
+	switch valueType {
+	// Any numbers convert to string and then do strings.Contains
+	case "string", "int", "uint", "float":
+		if strings.Contains(fmt.Sprint(value), fmt.Sprint(queryValue)) {
+			return true, nil
+		}
+	case "[]string", "[]int", "[]uint", "[]float":
+		// Loop through array and check if any of the values match
+		for _, v := range value.([]any) {
+			if strings.Contains(fmt.Sprint(v), fmt.Sprint(queryValue)) {
+				return true, nil // If one value matches, break the loop
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func isSearchRange(value any, valueType string, queryValue any, queryValueType string) (bool, error) {
+	// If valueType is not a number, then continue
+	if valueType == "string" || valueType == "bool" {
+		return false, fmt.Errorf("cannot use range search on %s type", valueType)
+	}
+
+	// Initial declarations for min and max values for both numeric and time ranges
+	var minNum, maxNum float64
+	var minTime, maxTime time.Time
+	var err error
+	var isTimeRange, isNumRange bool
+
+	// Determine the type of range query: Time or Numeric based on valueType
+	switch valueType {
+	case "time":
+		isTimeRange = true
+		// Handle time ranges
+		if timeRange, ok := queryValue.([]time.Time); ok && len(timeRange) > 0 {
+			minTime = timeRange[0]
+			if len(timeRange) > 1 {
+				maxTime = timeRange[1]
+			}
+		} else if singleTime, ok := queryValue.(time.Time); ok {
+			minTime = singleTime
+			// For single time, consider maxTime as zero value of time.Time, indicating no end range
+		}
+	case "int", "uint", "float":
+		isNumRange = true
+		// Handle numeric ranges
+		if numRange, ok := queryValue.([]time.Time); ok && len(numRange) > 0 {
+			minNum, err = toFloat64(numRange[0])
+			if err != nil {
+				return false, err // Skip if conversion fails
+			}
+			if len(numRange) > 1 {
+				maxNum, err = toFloat64(numRange[1])
+				if err != nil {
+					return false, err // Skip if conversion fails
+				}
+			}
+		} else if singleNum, ok := queryValue.(float64); ok {
+			minNum = singleNum
+			// For single number, consider maxNum as not set
+		}
+	}
+
+	// Compare based on determined range type
+	if isTimeRange {
+		fieldValue := value.(time.Time)
+		if !minTime.IsZero() && fieldValue.Before(minTime) {
+			return false, nil
+		}
+		if !maxTime.IsZero() && fieldValue.After(maxTime) {
+			return false, nil
+		}
+		return true, nil
+	} else if isNumRange {
+		fieldValue, err := toFloat64(value)
+		if err != nil {
+			return false, err // Skip if conversion fails
+		}
+		if fieldValue < minNum || (!isZero(maxNum) && fieldValue > maxNum) {
+			return false, nil
+		}
+		return true, nil
+	}
+
+	return false, fmt.Errorf("invalid range search type %s", valueType)
 }

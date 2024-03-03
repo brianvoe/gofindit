@@ -9,12 +9,42 @@ import (
 type Index struct {
 	Documents map[string]*Document
 
+	Filters []FilterFunc
+
+	// Cache
+	Cache     bool
+	CacheSize int
+
 	mu sync.RWMutex
+}
+
+type Options struct {
+	// Cache
+	Cache     bool // Whether or not to cache search results
+	CacheSize int  // The maximum number of search results to cache
+
+	// Filters
+	Filters []FilterFunc // The filters to apply to strings
 }
 
 func New() *Index {
 	index := Index{
 		Documents: make(map[string]*Document),
+		Filters:   DefaultFilters,
+		Cache:     true,
+		CacheSize: 100,
+	}
+
+	return &index
+}
+
+// NewOptions returns a new index with the given options
+func NewOptions(options Options) *Index {
+	index := Index{
+		Documents: make(map[string]*Document),
+		Filters:   options.Filters,
+		Cache:     options.Cache,
+		CacheSize: options.CacheSize,
 	}
 
 	return &index
@@ -41,7 +71,7 @@ func (i *Index) Index(id string, doc any) error {
 		return errors.New("id already taken")
 	}
 
-	docNew, err := NewDocument(doc)
+	docNew, err := NewDoc(doc)
 	if err != nil {
 		return err
 	}
