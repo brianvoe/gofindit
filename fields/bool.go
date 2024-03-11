@@ -29,19 +29,6 @@ func (b *BoolField) Value() any {
 	return b.value[0] == 1
 }
 
-// ToByte converts a boolean value to a byte slice.
-func (b *BoolField) ToByte(val any) ([]byte, error) {
-	boolVal, ok := val.(bool)
-	if !ok {
-		return nil, fmt.Errorf("BoolField requires a boolean value")
-	}
-
-	if boolVal {
-		return []byte{1}, nil
-	}
-	return []byte{0}, nil
-}
-
 // Process converts a boolean value to bytes and stores it in the BoolField struct.
 func (b *BoolField) Process(val any) error {
 	boolVal, ok := val.(bool)
@@ -55,6 +42,19 @@ func (b *BoolField) Process(val any) error {
 		b.value = []byte{0}
 	}
 	return nil
+}
+
+// ToSearchByte converts a boolean value to a byte slice.
+func (b *BoolField) ToSearchByte(val any) ([]byte, error) {
+	boolVal, ok := val.(bool)
+	if !ok {
+		return nil, fmt.Errorf("BoolField requires a boolean value")
+	}
+
+	if boolVal {
+		return []byte{1}, nil
+	}
+	return []byte{0}, nil
 }
 
 // Search checks if the given byte slice represents the same boolean value.

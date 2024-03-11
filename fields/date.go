@@ -31,8 +31,8 @@ func NewDate(config map[string]any) (Field, error) {
 	return &DateField{granularity: granularity}, nil
 }
 
-// dateToBytes adjusts the provided time.Time value according to the specified granularity and converts it to bytes.
-func dateToBytes(date any, granularity string) ([]byte, error) {
+// dateToSearchBytes adjusts the provided time.Time value according to the specified granularity and converts it to bytes.
+func dateToSearchBytes(date any, granularity string) ([]byte, error) {
 	dateVal, ok := date.(time.Time)
 	if !ok {
 		return nil, fmt.Errorf("DateField requires a time.Time value")
@@ -47,7 +47,7 @@ func dateToBytes(date any, granularity string) ([]byte, error) {
 }
 
 func (d *DateField) Type() string {
-	return "date"
+	return Date
 }
 
 func (d *DateField) Value() any {
@@ -57,12 +57,12 @@ func (d *DateField) Value() any {
 	return time.Unix(timestamp, 0)
 }
 
-func (d *DateField) ToByte(val any) ([]byte, error) {
-	return dateToBytes(val, d.granularity)
+func (d *DateField) ToSearchByte(val any) ([]byte, error) {
+	return dateToSearchBytes(val, d.granularity)
 }
 
 func (d *DateField) Process(dateVal any) error {
-	bytes, err := dateToBytes(dateVal, d.granularity)
+	bytes, err := dateToSearchBytes(dateVal, d.granularity)
 	if err != nil {
 		return err
 	}

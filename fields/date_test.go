@@ -72,7 +72,7 @@ func TestDateField_Search(t *testing.T) {
 	field.Process(testDate)
 
 	// Prepare a matching search value
-	searchBytes, _ := dateToBytes(testDate, "day")
+	searchBytes, _ := dateToSearchBytes(testDate, "day")
 	match, err := field.Search(searchBytes)
 	if err != nil {
 		t.Fatalf("Search() error = %v", err)
@@ -83,7 +83,7 @@ func TestDateField_Search(t *testing.T) {
 
 	// Prepare a non-matching search value (different day)
 	nonMatchDate := time.Date(2023, 3, 15, 0, 0, 0, 0, time.UTC)
-	nonMatchBytes, _ := dateToBytes(nonMatchDate, "day")
+	nonMatchBytes, _ := dateToSearchBytes(nonMatchDate, "day")
 	nonMatch, err := field.Search(nonMatchBytes)
 	if err != nil {
 		t.Fatalf("Search() error with non-matching date = %v", err)
@@ -151,11 +151,11 @@ func TestDateField_SearchRange(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Convert start and end to bytes
-			startBytes, err := dateToBytes(tc.start, config["granularity"].(string))
+			startBytes, err := dateToSearchBytes(tc.start, config["granularity"].(string))
 			if err != nil {
 				t.Fatalf("Failed to convert start date to bytes: %v", err)
 			}
-			endBytes, err := dateToBytes(tc.end, config["granularity"].(string))
+			endBytes, err := dateToSearchBytes(tc.end, config["granularity"].(string))
 			if err != nil {
 				t.Fatalf("Failed to convert end date to bytes: %v", err)
 			}

@@ -13,9 +13,15 @@ const (
 type Field interface {
 	Type() string
 	Value() any
-	ToByte(val any) ([]byte, error)
 
+	// To use the struct values to calculate how search bytes
+	// should be passed to the search function
+	ToSearchByte(val any) ([]byte, error)
+
+	// Process will take in an any value
+	// and use it to fill out the struct fields
 	Process(val any) error
+
 	Search(val []byte) (bool, error)
 	SearchRange(min, max []byte) (bool, error)
 }

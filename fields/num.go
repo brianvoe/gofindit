@@ -19,8 +19,8 @@ func NewNum(config map[string]any) (Field, error) {
 	return &NumField{}, nil
 }
 
-// NumToBytes converts a numeric value to a byte slice.
-func numToBytes(value any) ([]byte, error) {
+// NumToSearchBytes converts a numeric value to a byte slice.
+func numToSearchBytes(value any) ([]byte, error) {
 	var err error
 	buf := new(bytes.Buffer)
 
@@ -52,18 +52,18 @@ func (n *NumField) Value() any {
 	return n.Value
 }
 
-func (n *NumField) ToByte(val any) ([]byte, error) {
-	return numToBytes(val)
-}
-
-// Process converts a numeric value to bytes and stores it in the NumField struct using NumToBytes.
+// Process converts a numeric value to bytes and stores it in the NumField struct using NumToSearchBytes.
 func (n *NumField) Process(val any) error {
-	bytes, err := numToBytes(val)
+	bytes, err := numToSearchBytes(val)
 	if err != nil {
 		return fmt.Errorf("failed to process numeric value: %v", err)
 	}
 	n.val = bytes
 	return nil
+}
+
+func (n *NumField) ToSearchByte(val any) ([]byte, error) {
+	return numToSearchBytes(val)
 }
 
 // Search compares the given byte slice directly with the NumField's stored byte slice.

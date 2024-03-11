@@ -29,8 +29,8 @@ func (t *TextField) Value() any {
 	return string(t.value)
 }
 
-// ToByte converts a text value to a byte slice.
-func (t *TextField) ToByte(val any) ([]byte, error) {
+// ToSearchByte converts a text value to a byte slice.
+func (t *TextField) ToSearchByte(val any) ([]byte, error) {
 	strVal, ok := val.(string)
 	if !ok {
 		return nil, fmt.Errorf("TextField requires a string value")

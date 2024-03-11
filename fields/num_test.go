@@ -43,8 +43,8 @@ func TestNumField_Search(t *testing.T) {
 		t.Fatalf("Process() error = %v", err)
 	}
 
-	searchValue, _ := numToBytes(float64(42.42))    // Matching value
-	nonMatchingValue, _ := numToBytes(float64(100)) // Non-matching value
+	searchValue, _ := numToSearchBytes(float64(42.42))    // Matching value
+	nonMatchingValue, _ := numToSearchBytes(float64(100)) // Non-matching value
 
 	tests := []struct {
 		name      string
@@ -77,10 +77,10 @@ func TestNumField_SearchRange(t *testing.T) {
 		t.Fatalf("Process() error = %v", err)
 	}
 
-	minBytes, _ := numToBytes(40)
-	maxBytes, _ := numToBytes(60)
-	outOfRangeLow, _ := numToBytes(30)
-	outOfRangeHigh, _ := numToBytes(70)
+	minBytes, _ := numToSearchBytes(40)
+	maxBytes, _ := numToSearchBytes(60)
+	outOfRangeLow, _ := numToSearchBytes(30)
+	outOfRangeHigh, _ := numToSearchBytes(70)
 
 	tests := []struct {
 		name          string
