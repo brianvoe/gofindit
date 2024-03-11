@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/brianvoe/gofindit/fields"
 )
 
-type FieldValue struct {
-	Type   string
-	Value  any
-	Tokens []string
-}
-
 // getStructure returns an array of
-func getStructure(v any, parent string) (map[string]FieldValue, error) {
+func getStructure(v any, parent string) (map[string]fields.Field, error) {
 	// Make sure v is a struct
 	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		return nil, fmt.Errorf("v is not a struct")
@@ -25,7 +21,7 @@ func getStructure(v any, parent string) (map[string]FieldValue, error) {
 		val = val.Elem()
 	}
 
-	fields := make(map[string]FieldValue)
+	fields := make(map[string]fields.Field)
 
 	// Loop through fields and add name and type to fields
 	for i := 0; i < val.NumField(); i++ {

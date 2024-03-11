@@ -6,7 +6,7 @@ import (
 
 func Example() {
 	type Test struct {
-		Name string `find:"Name"`
+		Name string `find:"Name" index:"leve_string"`
 		Age  int    `find:"Age"`
 	}
 

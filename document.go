@@ -2,9 +2,7 @@ package gofindit
 
 type Document struct {
 	Original any
-	Values   map[string]FieldValue
-
-	Filters []FilterFunc
+	Values   map[string]Field
 }
 
 func NewDoc(doc any) (*Document, error) {
@@ -20,7 +18,7 @@ func NewDocFilters(doc any, filters ...FilterFunc) (*Document, error) {
 	// Loop through values and
 	// if they are a string, tokenize them
 	for k, v := range values {
-		if v.Type == "string" {
+		if v.Type() == "string" {
 			// Tokenize the string
 			tokens, error := Tokenize(v.Value.(string), filters)
 			if error != nil {

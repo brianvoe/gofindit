@@ -229,6 +229,28 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 	return originalResults, nil
 }
 
+// intersection returns the intersection of two arrays
+func intersection(a []int, b []int) []int {
+	maxLen := len(a)
+	if len(b) > maxLen {
+		maxLen = len(b)
+	}
+	r := make([]int, 0, maxLen)
+	var i, j int
+	for i < len(a) && j < len(b) {
+		if a[i] < b[j] {
+			i++
+		} else if a[i] > b[j] {
+			j++
+		} else {
+			r = append(r, a[i])
+			i++
+			j++
+		}
+	}
+	return r
+}
+
 // searchMatch checks if the value matches the query value
 func isSearchMatch(value any, valueType string, queryValue any, queryValueType string) (bool, error) {
 	// If the value type and query value type are the same, then just compare them
