@@ -42,6 +42,8 @@ func getStructure(v any, parent string) (map[string]fields.Field, error) {
 			name = parent + "." + name
 		}
 
+		//
+
 		// Handle different types
 		switch valueField.Kind() {
 		case reflect.String:
