@@ -8,6 +8,7 @@ import (
 
 // MockField for testing Field interface functionalities
 type MockField struct {
+	v   any // original value
 	val []byte
 }
 
@@ -19,8 +20,20 @@ func (m *MockField) Type() string {
 	return "mock"
 }
 
-func (m *MockField) Value() []byte {
-	return m.val
+func (m *MockField) Value() any {
+	return m.v
+}
+
+func (m *MockField) Process(val any) error {
+	// Set original value
+	m.v = val
+
+	strVal, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("mock field requires a string value")
+	}
+	m.val = []byte(strVal)
+	return nil
 }
 
 func (m *MockField) ToSearchBytes(val any) ([]byte, error) {
@@ -29,15 +42,6 @@ func (m *MockField) ToSearchBytes(val any) ([]byte, error) {
 		return nil, fmt.Errorf("mock field requires a string value for search")
 	}
 	return []byte(strVal), nil
-}
-
-func (m *MockField) Process(val any) error {
-	strVal, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("mock field requires a string value")
-	}
-	m.val = []byte(strVal)
-	return nil
 }
 
 func (m *MockField) Search(val []byte) (bool, error) {

@@ -39,8 +39,8 @@ func TestPartial_Process(t *testing.T) {
 	}
 
 	want := []byte("test")
-	if !reflect.DeepEqual(p.Value(), want) {
-		t.Errorf("Process() stored value = %v, want %v", p.Value(), want)
+	if !reflect.DeepEqual(p.value, want) {
+		t.Errorf("Process() stored value = %v, want %v", p.value, want)
 	}
 }
 

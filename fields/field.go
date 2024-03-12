@@ -16,7 +16,7 @@ const (
 // Field is an interface that all field types must implement
 type Field interface {
 	Type() string
-	Value() []byte
+	Value() any
 
 	// Process will take in an any value and
 	// use it to fill out the struct fields

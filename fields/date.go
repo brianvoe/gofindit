@@ -12,6 +12,7 @@ func init() {
 }
 
 type Date struct {
+	v           any // original value
 	value       []byte
 	granularity string
 }
@@ -50,8 +51,8 @@ func (d *Date) Type() string {
 	return DateType
 }
 
-func (d *Date) Value() []byte {
-	return d.value
+func (d *Date) Value() any {
+	return d.v
 }
 
 func (d *Date) ToDateTime() time.Time {

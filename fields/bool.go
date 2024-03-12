@@ -11,6 +11,7 @@ func init() {
 
 // Bool stores the boolean value as bytes
 type Bool struct {
+	v     any // original value
 	value []byte
 }
 
@@ -24,9 +25,8 @@ func (b *Bool) Type() string {
 }
 
 // Value returns the stored value of the Field
-func (b *Bool) Value() []byte {
-	// Interpret the byte slice as a boolean
-	return b.value
+func (b *Bool) Value() any {
+	return b.v
 }
 
 func (b *Bool) ToBool() bool {
@@ -39,6 +39,9 @@ func (b *Bool) Process(val any) error {
 	if !ok {
 		return fmt.Errorf("Bool requires a boolean value")
 	}
+
+	// Set original value
+	b.v = val
 
 	if boolVal {
 		b.value = []byte{1}

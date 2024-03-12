@@ -11,6 +11,7 @@ func init() {
 
 // Text stores the text value as a byte slice
 type Text struct {
+	v     any // original value
 	value []byte
 }
 
@@ -25,8 +26,8 @@ func (t *Text) Type() string {
 }
 
 // Value returns the stored value of the Field as a string
-func (t *Text) Value() []byte {
-	return t.value
+func (t *Text) Value() any {
+	return t.v
 }
 
 func (t *Text) ToString() string {
@@ -35,6 +36,9 @@ func (t *Text) ToString() string {
 
 // Process converts a text value to a byte slice and stores it in the Text struct
 func (t *Text) Process(val any) error {
+	// Set original value
+	t.v = val
+
 	strVal, ok := val.(string)
 	if !ok {
 		return fmt.Errorf("Text requires a string value")

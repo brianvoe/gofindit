@@ -12,7 +12,8 @@ func init() {
 
 // Num stores the numeric value directly as bytes
 type Num struct {
-	val []byte
+	v     any // original value
+	value []byte
 }
 
 // NewNum creates a new Num that will do an exact and range search
@@ -49,18 +50,21 @@ func (n *Num) Type() string {
 	return NumberType
 }
 
-func (n *Num) Value() []byte {
-	return n.val
+func (n *Num) Value() any {
+	return n.v
 }
 
 // Process converts a numeric value to bytes
 // and stores it in the Num struct using NumToSearchBytes
 func (n *Num) Process(val any) error {
+	// Set original value
+	n.v = val
+
 	bytes, err := numToSearchBytes(val)
 	if err != nil {
 		return fmt.Errorf("failed to process numeric value: %v", err)
 	}
-	n.val = bytes
+	n.value = bytes
 	return nil
 }
 
@@ -70,10 +74,10 @@ func (n *Num) ToSearchBytes(val any) ([]byte, error) {
 
 // Search compares the given byte slice directly with the Num's stored byte slice
 func (n *Num) Search(val []byte) (bool, error) {
-	return bytes.Equal(n.val, val), nil
+	return bytes.Equal(n.value, val), nil
 }
 
 // SearchRange checks if the stored value is within the given range [min, max]
 func (n *Num) SearchRange(min, max []byte) (bool, error) {
-	return bytes.Compare(n.val, min) >= 0 && bytes.Compare(n.val, max) <= 0, nil
+	return bytes.Compare(n.value, min) >= 0 && bytes.Compare(n.value, max) <= 0, nil
 }

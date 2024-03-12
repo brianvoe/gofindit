@@ -12,6 +12,7 @@ func init() {
 
 // Partial stores the text value as a byte slice for partial text search
 type Partial struct {
+	v     any // original value
 	value []byte
 }
 
@@ -38,12 +39,15 @@ func (p *Partial) Type() string {
 }
 
 // Value returns the stored value of the Field as a byte slice
-func (p *Partial) Value() []byte {
-	return p.value
+func (p *Partial) Value() any {
+	return p.v
 }
 
 // Process converts a text value to a byte slice and stores it in the Partial struct
 func (p *Partial) Process(val any) error {
+	// Set original value
+	p.v = val
+
 	bytes, err := stringToBytes(val)
 	if err != nil {
 		return err
