@@ -7,19 +7,20 @@ import (
 )
 
 func init() {
-	RegisterField("num", NewNum)
+	SetField("num", NewNum)
 }
 
-// NumField stores the numeric value directly as bytes.
-type NumField struct {
+// Num stores the numeric value directly as bytes
+type Num struct {
 	val []byte
 }
 
+// NewNum creates a new Num that will do an exact and range search
 func NewNum(config map[string]any) (Field, error) {
-	return &NumField{}, nil
+	return &Num{}, nil
 }
 
-// NumToSearchBytes converts a numeric value to a byte slice.
+// NumToSearchBytes converts a numeric value to a byte slice
 func numToSearchBytes(value any) ([]byte, error) {
 	var err error
 	buf := new(bytes.Buffer)
@@ -34,7 +35,7 @@ func numToSearchBytes(value any) ([]byte, error) {
 	case uint8, uint16, uint32, uint64:
 		err = binary.Write(buf, binary.BigEndian, v)
 	default:
-		return nil, fmt.Errorf("unsupported type for NumField: %T", v)
+		return nil, fmt.Errorf("unsupported type for Num: %T", v)
 	}
 
 	if err != nil {
@@ -44,16 +45,17 @@ func numToSearchBytes(value any) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (n *NumField) Type() string {
-	return Number
+func (n *Num) Type() string {
+	return NumberType
 }
 
-func (n *NumField) Value() any {
-	return n.Value
+func (n *Num) Value() []byte {
+	return n.val
 }
 
-// Process converts a numeric value to bytes and stores it in the NumField struct using NumToSearchBytes.
-func (n *NumField) Process(val any) error {
+// Process converts a numeric value to bytes
+// and stores it in the Num struct using NumToSearchBytes
+func (n *Num) Process(val any) error {
 	bytes, err := numToSearchBytes(val)
 	if err != nil {
 		return fmt.Errorf("failed to process numeric value: %v", err)
@@ -62,16 +64,16 @@ func (n *NumField) Process(val any) error {
 	return nil
 }
 
-func (n *NumField) ToSearchByte(val any) ([]byte, error) {
+func (n *Num) ToSearchBytes(val any) ([]byte, error) {
 	return numToSearchBytes(val)
 }
 
-// Search compares the given byte slice directly with the NumField's stored byte slice.
-func (n *NumField) Search(val []byte) (bool, error) {
+// Search compares the given byte slice directly with the Num's stored byte slice
+func (n *Num) Search(val []byte) (bool, error) {
 	return bytes.Equal(n.val, val), nil
 }
 
-// SearchRange checks if the stored value is within the given range [min, max].
-func (n *NumField) SearchRange(min, max []byte) (bool, error) {
+// SearchRange checks if the stored value is within the given range [min, max]
+func (n *Num) SearchRange(min, max []byte) (bool, error) {
 	return bytes.Compare(n.val, min) >= 0 && bytes.Compare(n.val, max) <= 0, nil
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestDateField_Process(t *testing.T) {
+func TestDate_Process(t *testing.T) {
 	location, _ := time.LoadLocation("UTC") // Ensure consistent use of the UTC time zone
 
 	tests := []struct {
@@ -48,7 +48,7 @@ func TestDateField_Process(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			field, _ := NewDate(map[string]any{"granularity": tc.granularity})
 
-			fieldDate := field.(*DateField)
+			fieldDate := field.(*Date)
 			fieldDate.Process(tc.date)
 
 			// Convert the stored bytes back to a time.Time value, explicitly using UTC
@@ -65,7 +65,7 @@ func TestDateField_Process(t *testing.T) {
 	}
 }
 
-func TestDateField_Search(t *testing.T) {
+func TestDate_Search(t *testing.T) {
 	// Initial setup
 	testDate := time.Date(2023, 3, 14, 0, 0, 0, 0, time.UTC)
 	field, _ := NewDate(map[string]any{"granularity": "day"})
@@ -93,19 +93,19 @@ func TestDateField_Search(t *testing.T) {
 	}
 }
 
-func TestDateField_SearchRange(t *testing.T) {
+func TestDate_SearchRange(t *testing.T) {
 	location, _ := time.LoadLocation("UTC") // Use UTC for consistent testing
 
-	// Create a DateField instance with day granularity for testing
+	// Create a Date instance with day granularity for testing
 	config := map[string]any{"granularity": "day"}
-	dateField, err := NewDate(config)
+	date, err := NewDate(config)
 	if err != nil {
 		t.Fatalf("NewDate() failed with error: %v", err)
 	}
 
 	// Process a specific date to be searched
 	testDate := time.Date(2023, 3, 15, 12, 0, 0, 0, location)
-	if err := dateField.Process(testDate); err != nil {
+	if err := date.Process(testDate); err != nil {
 		t.Fatalf("Process() failed with error: %v", err)
 	}
 
@@ -161,7 +161,7 @@ func TestDateField_SearchRange(t *testing.T) {
 			}
 
 			// Perform the range search
-			inRange, err := dateField.SearchRange(startBytes, endBytes)
+			inRange, err := date.SearchRange(startBytes, endBytes)
 			if err != nil {
 				t.Fatalf("SearchRange() failed with error: %v", err)
 			}

@@ -2,7 +2,7 @@ package fields
 
 import "testing"
 
-func TestNumField_Process(t *testing.T) {
+func TestNum_Process(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     any
@@ -25,7 +25,7 @@ func TestNumField_Process(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nf := &NumField{}
+			nf := &Num{}
 			err := nf.Process(tt.input)
 
 			if (err != nil) != tt.expectErr {
@@ -35,9 +35,9 @@ func TestNumField_Process(t *testing.T) {
 	}
 }
 
-func TestNumField_Search(t *testing.T) {
+func TestNum_Search(t *testing.T) {
 	// Process a value first
-	nf := &NumField{}
+	nf := &Num{}
 	inputValue := float64(42.42)
 	if err := nf.Process(inputValue); err != nil {
 		t.Fatalf("Process() error = %v", err)
@@ -70,9 +70,9 @@ func TestNumField_Search(t *testing.T) {
 	}
 }
 
-func TestNumField_SearchRange(t *testing.T) {
+func TestNum_SearchRange(t *testing.T) {
 	// Process a middle value for range testing
-	nf := &NumField{}
+	nf := &Num{}
 	if err := nf.Process(50); err != nil {
 		t.Fatalf("Process() error = %v", err)
 	}

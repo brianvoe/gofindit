@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestBoolField_Process(t *testing.T) {
+func TestBool_Process(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   any
@@ -18,7 +18,7 @@ func TestBoolField_Process(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &BoolField{}
+			b := &Bool{}
 			err := b.Process(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Process() error = %v, wantErr %v", err, tt.wantErr)
@@ -31,8 +31,8 @@ func TestBoolField_Process(t *testing.T) {
 	}
 }
 
-func TestBoolField_Search(t *testing.T) {
-	b := &BoolField{}
+func TestBool_Search(t *testing.T) {
+	b := &Bool{}
 	_ = b.Process(true) // Assuming Process works as expected here
 
 	tests := []struct {
