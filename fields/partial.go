@@ -3,6 +3,7 @@ package fields
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 func init() {
@@ -24,6 +25,10 @@ func stringToBytes(val any) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("value requires a string")
 	}
+
+	// Lowercase the string and convert it to a byte slice
+	strVal = strings.ToLower(strVal)
+
 	return []byte(strVal), nil
 }
 
