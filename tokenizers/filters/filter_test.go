@@ -5,27 +5,27 @@ import "testing"
 func TestFuncsID(t *testing.T) {
 	tests := []struct {
 		name   string
-		funcs  []FilterFunc
+		funcs  []Func
 		result string
 	}{
 		{
 			name:   "empty",
-			funcs:  []FilterFunc{},
+			funcs:  []Func{},
 			result: "",
 		},
 		{
 			name:   "single",
-			funcs:  []FilterFunc{Lowercase},
+			funcs:  []Func{Lowercase},
 			result: "ecf35cbbd166",
 		},
 		{
 			name:   "multiple",
-			funcs:  []FilterFunc{Lowercase, RemoveStopwords},
+			funcs:  []Func{Lowercase, RemoveStopwords},
 			result: "76040804a901",
 		},
 		{
 			name:   "multiple_reverse",
-			funcs:  []FilterFunc{RemoveStopwords, Lowercase},
+			funcs:  []Func{RemoveStopwords, Lowercase},
 			result: "007bdd218ee4", // Should be different from multiple
 		},
 	}

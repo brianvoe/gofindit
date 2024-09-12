@@ -149,15 +149,12 @@ func (i *Index) Search(searchQuery SearchQuery) ([]any, error) {
 
 		// Loop through search query fields
 		for _, query := range searchQueryField {
-			// Get Value
-			value, found := doc.GetFieldValue(query.Field)
+			// Get Field
+			field, found := doc.GetField(query.Field)
 			if !found {
 				// Field not found
 				continue
 			}
-
-			// Get Value Type
-			valueType, _ := doc.GetFieldType(query.Field)
 
 			// Get Query Value and Type
 			queryValue := query.Value

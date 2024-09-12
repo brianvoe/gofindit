@@ -8,13 +8,9 @@ import (
 	"strings"
 )
 
-type FilterFunc func([]string) ([]string, error)
+type Func func([]string) ([]string, error)
 
-var DefaultFilters = []FilterFunc{
-	Lowercase,
-}
-
-func FuncsID(filters ...FilterFunc) string {
+func FuncsID(filters ...Func) string {
 	// if no filters, return empty string
 	if len(filters) == 0 {
 		return ""

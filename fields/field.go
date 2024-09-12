@@ -13,21 +13,24 @@ const (
 	DateType    = "d"
 )
 
+var DefaultText = "text"
+var DefaultNumber = "num"
+var DefaultBoolean = "bool"
+var DefaultDate = "date"
+
 // Field is an interface that all field types must implement
-type Field interface {
-	Type() string
-	Value() any
+type Field struct {
+	Type  string
+	Value any
 
-	// Process will take in an any value and
-	// use it to fill out the struct fields
-	Process(val any) error
+	Fields map[string]FieldData
+}
 
-	// To use the struct values to calculate how search
-	// bytes should be passed to the search function
-	ToSearchBytes(val any) ([]byte, error)
-
-	Search(val []byte) (bool, error)
-	SearchRange(min, max []byte) (bool, error)
+type FieldData interface {
+	// Process(val any) error
+	// ToSearchBytes(val any) ([]byte, error)
+	// Search(val []byte) (bool, error)
+	// SearchRange(min, max []byte) (bool, error)
 }
 
 type storage struct {
